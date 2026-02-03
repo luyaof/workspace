@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binance Log Analyzer</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app" class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <span class="logo-icon">&#128269;</span>
+        <span>Binance Log Analyzer</span>
+      </div>
+      <div class="upload-section">
+        <div class="file-input-wrapper">
+          <input
+            type="file"
+            class="file-input"
+            accept=".log,.txt"
+            @change="handleFileSelect"
+          >
+          <button class="file-btn">Select File</button>
+        </div>
+        <div
+          class="drop-zone"
+          :class="{ 'drag-over': isDragOver }"
+          @drop="handleDrop"
+          @dragover="handleDragOver"
+          @dragleave="handleDragLeave"
+        >
+          or drag & drop here
+        </div>
+      </div>
+    </header>
+
+    <!-- Error Message -->
+    <div v-if="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="isLoading" class="loading">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- File Info Bar -->
+    <div v-if="fileInfo && !isLoading" class="file-info">
+      <span>File: <strong>{{ fileInfo.name }}</strong></span>
+      <span>Size: <strong>{{ fileInfo.size }}</strong></span>
+      <span>Lines: <strong>{{ totalLines }}</strong></span>
+      <span>Events: <strong>{{ events.length }}</strong></span>
+      <span>Sessions: <strong>{{ sessions.length }}</strong></span>
+    </div>
+
+    <!-- Main Content -->
+    <template v-if="fileInfo && !isLoading">
+      <!-- Asset Filter -->
+      <div class="filter-section" v-if="assets.length > 0">
+        <span class="filter-label">Asset Filter:</span>
+        <button
+          class="filter-btn"
+          :class="{ active: selectedAsset === 'all' }"
+          @click="selectedAsset = 'all'"
+        >
+          All
+        </button>
+        <button
+          v-for="asset in assets"
+          :key="asset"
+          class="filter-btn"
+          :class="{ active: selectedAsset === asset }"
+          @click="selectedAsset = asset"
+        >
+          {{ asset }}
+        </button>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="stats-grid" v-if="stats">
+        <!-- Session Overview -->
+        <div class="stat-card">
+          <h3>Session Overview</h3>
+          <div class="stat-row">
+            <span class="stat-label">Runtime</span>
+            <span class="stat-value">{{ formatDuration(stats.runtime) }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Spread Triggers</span>
+            <span class="stat-value">{{ stats.spreadTriggers }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Order Pairs</span>
+            <span class="stat-value">{{ stats.orderPairs.succeeded }}/{{ stats.orderPairs.attempted }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Success Rate</span>
+            <span class="stat-value" :class="{ success: parseFloat(stats.orderPairs.successRate) >= 90 }">
+              {{ stats.orderPairs.successRate }}%
+            </span>
+          </div>
+        </div>
+
+        <!-- Order Statistics -->
+        <div class="stat-card">
+          <h3>Order Statistics</h3>
+          <div class="stat-row">
+            <span class="stat-label">Total Orders</span>
+            <span class="stat-value">{{ stats.orders.total }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Accept Rate</span>
+            <span class="stat-value" :class="{ success: parseFloat(stats.orders.acceptRate) >= 90 }">
+              {{ stats.orders.acceptRate }}%
+            </span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Avg Latency</span>
+            <span class="stat-value">{{ stats.orders.avgLatency }}ms</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">GTX Rejections</span>
+            <span class="stat-value" :class="{ error: stats.errors.gtxRejections > 0 }">
+              {{ stats.errors.gtxRejections }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Fill Statistics -->
+        <div class="stat-card">
+          <h3>Fill Statistics</h3>
+          <div class="stat-row">
+            <span class="stat-label">Total Fills</span>
+            <span class="stat-value">{{ stats.fills.total }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Partial Fills</span>
+            <span class="stat-value">{{ stats.fills.partial }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">USDT Qty</span>
+            <span class="stat-value">{{ formatQuantity(stats.fills.usdtQty) }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">USDC Qty</span>
+            <span class="stat-value">{{ formatQuantity(stats.fills.usdcQty) }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Avg Price</span>
+            <span class="stat-value">{{ stats.fills.avgPrice }}</span>
+          </div>
+        </div>
+
+        <!-- Fast Chase Statistics -->
+        <div class="stat-card">
+          <h3>Fast Chase</h3>
+          <div class="stat-row">
+            <span class="stat-label">Events</span>
+            <span class="stat-value">{{ stats.fastChase.events }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Success Rate</span>
+            <span class="stat-value" :class="{ success: parseFloat(stats.fastChase.successRate) >= 90 }">
+              {{ stats.fastChase.successRate }}%
+            </span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Avg Retries</span>
+            <span class="stat-value">{{ stats.fastChase.avgRetries }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Fallbacks</span>
+            <span class="stat-value">{{ Object.keys(stats.fastChase.fallbackReasons).length }}</span>
+          </div>
+        </div>
+
+        <!-- Error Statistics -->
+        <div class="stat-card" v-if="stats.errors.gtxRejections + stats.errors.apiErrors + stats.errors.timeouts + stats.errors.other > 0">
+          <h3>Errors</h3>
+          <div class="stat-row">
+            <span class="stat-label">GTX Rejections</span>
+            <span class="stat-value error">{{ stats.errors.gtxRejections }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">API Errors</span>
+            <span class="stat-value error">{{ stats.errors.apiErrors }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Timeouts</span>
+            <span class="stat-value error">{{ stats.errors.timeouts }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Other</span>
+            <span class="stat-value error">{{ stats.errors.other }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Details Table -->
+      <div class="orders-section collapsible" v-if="orderDetails.length > 0">
+        <h3 class="section-header" @click="allOrdersExpanded = !allOrdersExpanded">
+          <span>Order Details (All Sessions) - {{ orderDetails.length }} orders</span>
+          <span class="expand-icon">{{ allOrdersExpanded ? '▼' : '▶' }}</span>
+        </h3>
+        <div class="orders-table-wrapper" v-show="allOrdersExpanded">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Symbol</th>
+                <th>Side</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Latency</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="order in orderDetails" :key="order.orderId">
+                <td>{{ order.timeString }}</td>
+                <td class="symbol">{{ order.symbol }}</td>
+                <td :class="order.side === 'BUY' ? 'side-buy' : 'side-sell'">
+                  {{ order.side }}
+                </td>
+                <td>{{ order.orderType }}</td>
+                <td>{{ order.quantity }}</td>
+                <td>{{ order.price }}</td>
+                <td>{{ order.latency ? order.latency + 'ms' : '-' }}</td>
+                <td class="status">
+                  <span>{{ order.statusIcon }}</span>
+                  <span>{{ order.statusText }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Order History Per Session -->
+      <div class="session-history" v-if="sessionOrderHistory.length > 0">
+        <h3>Order History Per Session</h3>
+        <div
+          class="session-block"
+          v-for="(item, index) in sessionOrderHistory"
+          :key="index"
+        >
+          <div class="session-header" @click="item.expanded = !item.expanded">
+            <div class="session-info">
+              <span class="session-asset">{{ item.session.asset }}</span>
+              <span class="session-time">
+                {{ formatTime(item.session.startTime) }} - {{ formatTime(item.session.endTime) }}
+              </span>
+              <span class="session-duration">({{ item.session.duration }})</span>
+            </div>
+            <div class="session-summary">
+              <span class="summary-item">
+                <span class="summary-label">Spreads:</span>
+                <span class="summary-value">{{ item.stats.spreadTriggers }}</span>
+              </span>
+              <span class="summary-item">
+                <span class="summary-label">Pairs:</span>
+                <span class="summary-value">{{ item.stats.orderPairs.succeeded }}/{{ item.stats.orderPairs.attempted }}</span>
+              </span>
+              <span class="summary-item">
+                <span class="summary-label">Orders:</span>
+                <span class="summary-value">{{ item.orders.length }}</span>
+              </span>
+              <span class="summary-item">
+                <span class="summary-label">Fills:</span>
+                <span class="summary-value">{{ item.stats.fills.total }}</span>
+              </span>
+              <span class="summary-item">
+                <span class="summary-label">USDT:</span>
+                <span class="summary-value">{{ formatQuantity(item.stats.fills.usdtQty) }}</span>
+              </span>
+              <span class="summary-item">
+                <span class="summary-label">USDC:</span>
+                <span class="summary-value">{{ formatQuantity(item.stats.fills.usdcQty) }}</span>
+              </span>
+            </div>
+            <span class="expand-icon">{{ item.expanded === false ? '▶' : '▼' }}</span>
+          </div>
+          <div class="session-orders" v-show="item.expanded !== false">
+            <table class="orders-table compact" v-if="item.orders.length > 0">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Submit</th>
+                  <th>Fill</th>
+                  <th>Symbol</th>
+                  <th>Side</th>
+                  <th>Submitted</th>
+                  <th>Filled</th>
+                  <th>Cumulative</th>
+                  <th>Accum</th>
+                  <th>Price</th>
+                  <th>Latency</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="order in item.orders" :key="order.orderId + '_' + order.fillTime">
+                  <td class="order-id">{{ order.orderId }}</td>
+                  <td>{{ order.submitTimeString }}</td>
+                  <td>{{ order.fillTimeString }}</td>
+                  <td class="symbol">{{ order.symbol }}</td>
+                  <td :class="order.side === 'BUY' ? 'side-buy' : 'side-sell'">
+                    {{ order.side }}
+                  </td>
+                  <td>{{ order.quantity }}</td>
+                  <td>{{ order.filledQty > 0 ? formatQuantity(order.filledQty) : '-' }}</td>
+                  <td>{{ order.cumulativeFilled > 0 ? formatQuantity(order.cumulativeFilled) + '/' + order.quantity : '-' }}</td>
+                  <td class="accum">{{ order.accumulated ? formatQuantity(order.accumulated) : '-' }}</td>
+                  <td>{{ order.price }}</td>
+                  <td>{{ order.latency ? order.latency + 'ms' : '-' }}</td>
+                  <td class="status">
+                    <span>{{ order.statusIcon }}</span>
+                    <span>{{ order.statusText }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="no-orders" v-else>No orders in this session</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export Button -->
+      <div class="export-section">
+        <button class="export-btn" @click="exportJson" :disabled="!stats">
+          Export JSON
+        </button>
+      </div>
+    </template>
+
+    <!-- Empty State -->
+    <div v-if="!fileInfo && !isLoading" class="empty-state">
+      <div class="empty-state-icon">&#128196;</div>
+      <h2>No Log File Loaded</h2>
+      <p>Select a .log file or drag and drop to analyze</p>
+      <p style="margin-top: 10px; font-size: 0.8rem; opacity: 0.7;">
+        Log path: %APPDATA%/com.binance.futures.demo/logs/app_YYYY-MM-DD.log
+      </p>
+    </div>
+  </div>
+
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <!-- Application Scripts -->
+  <script src="js/models.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
