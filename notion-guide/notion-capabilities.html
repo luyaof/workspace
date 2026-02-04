@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            margin: 0;
+            padding: 60px;
+            width: 1920px;
+            height: auto;
+            min-height: 1080px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        h1 {
+            font-size: 72px;
+            margin: 0 0 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 32px;
+            opacity: 0.9;
+            margin-bottom: 50px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        h2 {
+            font-size: 48px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .emoji {
+            font-size: 56px;
+        }
+        .capability-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .capability-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .capability-card h3 {
+            font-size: 32px;
+            margin: 0 0 15px 0;
+        }
+        .capability-card p {
+            font-size: 22px;
+            line-height: 1.6;
+            margin: 0;
+            opacity: 0.95;
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+        .example {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #ffd700;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .example-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        ul {
+            font-size: 24px;
+            line-height: 1.8;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 24px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Clawdbot + Notion Integration</h1>
+        <div class="subtitle">What I Can Do With Your Notion Workspace</div>
+
+        <div class="section">
+            <h2><span class="emoji">📄</span> Pages Management</h2>
+            <div class="capability-grid">
+                <div class="capability-card">
+                    <h3>Create Pages</h3>
+                    <p>I can create new pages anywhere in your workspace, with custom titles and rich content including headings, paragraphs, lists, and more.</p>
+                </div>
+                <div class="capability-card">
+                    <h3>Update Pages</h3>
+                    <p>Modify existing pages by updating properties, adding new content blocks, or reorganizing structure.</p>
+                </div>
+                <div class="capability-card">
+                    <h3>Search Pages</h3>
+                    <p>Find pages by title, content, or properties across your entire workspace quickly.</p>
+                </div>
+                <div class="capability-card">
+                    <h3>Read Content</h3>
+                    <p>Extract and analyze page content, including all blocks and nested structures.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span class="emoji">📊</span> Database Operations</h2>
+            <div class="capability-grid">
+                <div class="capability-card">
+                    <h3>Create Databases</h3>
+                    <p>Build custom databases with any property types: text, dates, select, multi-select, checkboxes, relations, and more.</p>
+                </div>
+                <div class="capability-card">
+                    <h3>Query Databases</h3>
+                    <p>Filter and sort database entries with complex conditions to find exactly what you need.</p>
+                </div>
+                <div class="capability-card">
+                    <h3>Add Entries</h3>
+                    <p>Create new database items with all properties populated programmatically.</p>
+                </div>
+                <div class="capability-card">
+                    <h3>Update Entries</h3>
+                    <p>Modify database properties, change statuses, update dates, and manage relations.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span class="emoji">🎨</span> Content Blocks</h2>
+            <p style="font-size: 24px; margin-bottom: 20px;">I can add various types of content blocks to your pages:</p>
+            <ul>
+                <li><strong>Text blocks:</strong> Paragraphs, headings (H1, H2, H3), quotes, callouts</li>
+                <li><strong>Lists:</strong> Bulleted lists, numbered lists, toggle lists</li>
+                <li><strong>Media:</strong> Images, videos, files, embeds</li>
+                <li><strong>Organization:</strong> Dividers, columns, table of contents</li>
+                <li><strong>Interactive:</strong> To-do checkboxes, code blocks, equations</li>
+                <li><strong>Advanced:</strong> Linked databases, synced blocks</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2><span class="emoji">⚡</span> Automation Examples</h2>
+            
+            <div class="example">
+                <div class="example-title">📝 Daily Journal Entry</div>
+                <p style="font-size: 22px;">Automatically create a daily journal page with date, weather, and prompts for reflection.</p>
+            </div>
+
+            <div class="example">
+                <div class="example-title">✅ Task Management</div>
+                <p style="font-size: 22px;">Add tasks to your to-do list, mark items complete, filter by due date, and get daily summaries.</p>
+            </div>
+
+            <div class="example">
+                <div class="example-title">📚 Content Organization</div>
+                <p style="font-size: 22px;">Automatically organize notes, tag by topics, create indexes, and link related content.</p>
+            </div>
+
+            <div class="example">
+                <div class="example-title">📊 Project Tracking</div>
+                <p style="font-size: 22px;">Update project statuses, log progress, create reports, and manage team databases.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span class="emoji">🔧</span> How It Works</h2>
+            <div class="code-block">
+# I use the Notion API with your integration key<br>
+# Example: Creating a page<br>
+<br>
+curl -X POST "https://api.notion.com/v1/pages" \<br>
+  -H "Authorization: Bearer ntn_..." \<br>
+  -H "Notion-Version: 2022-06-28" \<br>
+  -d '{<br>
+    "parent": {"page_id": "your-page-id"},<br>
+    "properties": {<br>
+      "title": [{"text": {"content": "New Page"}}]<br>
+    }<br>
+  }'
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><span class="emoji">💡</span> Use Cases</h2>
+            <ul>
+                <li>Automated note-taking and journaling</li>
+                <li>Task and project management</li>
+                <li>Content creation and documentation</li>
+                <li>Data collection and organization</li>
+                <li>Meeting notes and action items</li>
+                <li>Knowledge base building</li>
+                <li>Habit tracking and goal monitoring</li>
+                <li>Research and information gathering</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            🚀 Just ask me to create, update, or query anything in your Notion workspace!<br>
+            Created: 2026-02-04
+        </div>
+    </div>
+</body>
+</html>
